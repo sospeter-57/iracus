@@ -14,7 +14,7 @@ impl<'a> Compartment {
 
     pub fn disp(&self) -> String {
         format!(
-            "\t{}\n\t{}",
+            "\t[label] {}:\t[secret] {}\t [",
             self.label,
             String::from_utf8_lossy(&self.data)
         )

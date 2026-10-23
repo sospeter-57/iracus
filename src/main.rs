@@ -65,19 +65,20 @@ fn main() {
 
         stdout().flush().unwrap();
         stdin().read_line(&mut movex).unwrap();
-        let movex = movex.trim();
+        // let movex = movex.trim();
 
-        match movex {
-            "1" => {
+        match movex.as_str() {
+            "1\n" => {
                 let mut input_secret = InputSecret::new();
                 input_secret.input();
                 if vault.save_secret(&input_secret) {
                     println!("{:?} saved successfully", &input_secret.label)
                 } else {
-                    println!("failed to input secret to vault")
+                    println!("failed to input secret to vault");
                 }
+                movex.clear();
             }
-            "2" => {
+            "2\n" => {
                 let search_label = input_something("Enter secret Label: ");
                 let search_division = input_something("Enter secret division: ");
                 let search_division = match search_division.as_str() {
@@ -90,13 +91,16 @@ fn main() {
                 let search_division: Division = search_division.expect("that's not a valid division we have")
                     ;
                 let secret = vault.retrieve_secret(search_label.to_owned(), search_division);
-                println!("here's your long lived secret: {:?}", secret);
+                println!("\nhere's your long lived secret: {:?}\n", String::from_utf8(secret).unwrap());
+                movex.clear();
             }
-            "3" => {
+            "3\n" => {
                 let info = vault.info();
-                println!("{}", info)
+                println!("{}", info);
+                movex.clear();
             }
-            "0" => {
+            "0\n" => {
+                movex.clear();
                 break;
             }
             _ => panic!("unknown iracus command used"),
