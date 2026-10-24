@@ -10,7 +10,7 @@ pub struct Door {
 
 impl Door {
     pub fn new() -> Self {
-        let cmps = Compartment::new("");
+        let cmps = Compartment::new();
         Door {
             status: Status::Open,
             compartment: cmps,

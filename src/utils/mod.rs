@@ -56,3 +56,13 @@ fn validate_division(division: &str) -> bool {
         _ => false,
     }
 }
+
+use uuid::Uuid;
+
+pub fn get_uid() -> String {
+    Uuid::new_v4().to_string()
+}
+
+pub fn get_info() -> String {
+    String::from("default infomation")
+}

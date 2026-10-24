@@ -20,22 +20,22 @@ impl Foo {
             compartments: cmps,
         }
     }
-
-    // pub fn add_secret(label: String, secret: Vec<u8>, bocal: &mut Bocal) {
-    //     let compartment = Compartment {
-    //         label, data: secret
-    //     };
-    // }
-    //
-    pub fn find_secret(&self, label: String) -> Option<Vec<u8>> {
-        for cmpt in &self.compartments {
-            if label == cmpt.label {
-                return Some(cmpt.data.clone());
-            }
-        }
-        None
-    }
-
+// 
+//     // pub fn add_secret(label: String, secret: Vec<u8>, bocal: &mut Bocal) {
+//     //     let compartment = Compartment {
+//     //         label, data: secret
+//     //     };
+//     // }
+//     //
+//     pub fn find_secret(&self, label: String) -> Option<Vec<u8>> {
+//         for cmpt in &self.compartments {
+//             if label == cmpt.label {
+//                 return Some(cmpt.data.clone());
+//             }
+//         }
+//         None
+//     }
+// 
     pub fn info(&self) -> String {
         let compartments = self
             .compartments
@@ -46,4 +46,7 @@ impl Foo {
 
         format!("\n----- > foo division info < ----\n{}", compartments)
     }
+// 
+//     // pub fn acquire_compartment()
+    
 }

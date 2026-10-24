@@ -21,15 +21,6 @@ impl Quix {
         }
     }
 
-    pub fn find_secret(&self, label: String) -> Option<Vec<u8>> {
-        for cmpt in &self.compartments {
-            if label == cmpt.label {
-                return Some(cmpt.data.clone());
-            }
-        }
-        None
-    }
-
     pub fn info(&self) -> String {
         let compartments = self
             .compartments
