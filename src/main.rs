@@ -1,22 +1,29 @@
 // use std::env;
-
+mod services;
 mod models;
+mod persistent;
 use models::{insider::Insider,  user::User};
 mod utils;
 use std::io::{Write, stdin, stdout};
 use std::env;
-
+// use services::crypt::{encrypt};
 use utils::*;
 
 
-
 fn main() {
+    // first we login the user
+    // get their password which will be used to derive the key
+    let username = input_something("Enter your username: ");
+    let password = input_something("Enter your password: ");
+
     let mut insider = Insider::init();
 
     // let username = "sospeter".to_owned();
     // let email = "sospeterkinyanjui57@gmail.com".to_owned();
+    
     let mut user: User = Insider::get_demo_user();
-
+    user.password = password;
+    user.username = username;
     insider.add_user(user.clone());
     
     let vars: Vec<String> = env::args().collect();
@@ -43,8 +50,7 @@ fn main() {
     if command == "add" {
         let mut input_secret = InputSecret::new();
         input_secret.input();
-        // let default_label = Label::default();
-        if let Some(_truest) = user.add_secret(input_secret) {
+        if user.add_secret(input_secret) {
             println!("secret added successfully")
         } else {
             println!("error: failed to add secret")
@@ -96,7 +102,7 @@ fn main() {
                 "1\n" => {
                     let mut input_secret = InputSecret::new();
                     input_secret.input();
-                    if let Some(_) = user.add_secret(input_secret) {
+                    if user.add_secret(input_secret) {
                         println!("secret added successfully");
                     } else {
                         println!("error: failed to add secret");
@@ -106,7 +112,11 @@ fn main() {
                 "2\n" => {
                     
                     let secret = user.retrieve_secret();
-                    println!("here's your long lived secret: {:?}", secret);
+                    match secret {
+                        Ok(secret) =>    println!("here's your long lived secret: {:?}", secret),
+                        Err(error) => println!("this error occurred: {:?}", error),
+                    }
+                 
                     movex.clear();
                 }
                 "3\n" => {

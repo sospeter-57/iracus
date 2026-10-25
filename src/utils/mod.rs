@@ -1,6 +1,6 @@
 use std::io::{Write, stdin, stdout};
 
-use crate::models::division::Division;
+use crate::models::{compartment::Label, division::Division};
 
 pub struct InputSecret {
     pub label: String,

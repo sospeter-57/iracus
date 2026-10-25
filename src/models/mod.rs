@@ -7,10 +7,10 @@ mod door;
 mod foo;
 mod quix;
 mod zar;
+
 mod lock;
 pub mod user;
 pub mod insider;
-
 #[derive(Debug)]
 pub enum Status {
     Locked,

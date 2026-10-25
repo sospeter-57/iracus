@@ -1,8 +1,4 @@
-use crate::{models::{
-    division::Division,
-    iracus::Iracus,
-    user::User,
-}, utils::get_uid};
+use crate::models::{ iracus::Iracus, user::User };
 
 pub struct Insider {
  vault: Iracus,
@@ -24,5 +20,8 @@ impl Insider {
     pub fn get_demo_user() -> User {
         User::get_demo()
     }
+
+    // temp function
+    // pub fn add_pass)
     
 }

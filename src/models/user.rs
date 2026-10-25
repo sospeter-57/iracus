@@ -1,93 +1,94 @@
 use crate::models::compartment::{Compartment, Label};
 use crate::models::division::Division;
 use crate::models::iracus::Iracus;
+use crate::services::crypt::{decrypt, encrypt};
 use crate::utils::{InputSecret, get_uid};
+
+use base64::{engine::general_purpose::STANDARD, Engine};
 
 #[derive(Clone)]
 pub struct User {
     pub id: String,
     pub username: String,
     pub email: String,
+    pub password: String,
+
+    // ths field acts as an additional security mechanism
+    // it' makes the password not enough to encrypt or decrypt data
+    // in future it's not supposed to be hardcoded, a cleverer mechanism is need
+    // but it has to stay regardless
+    extra_secret: String,
     pub compartment: Compartment,
-     // current_lock: Lock,
+    // current_lock: Lock,
 }
 
 impl User {
-
-    // the blocks below were commented to try the user-sees-operates-on-compartents-first
-//     // the following two functions will be called 
-//     // over a series of either getting ore inside the vault
-//     // or getting more outside of the vault, 
-//     // but the logic is the sae for both ways
-//     // if you open a lock, you must close the previous first
-//     // idealy, this involves internally (through privae fields)
-//     // getting locks and returning locks for iracus, divisions and invidual compartments
-//     pub fn open_next(key: &str) -> bool {
-//         User::close_behind();
-//         false
-//     }
-// 
-//     pub fn close_behind() {
-//         
-//     }
-// 
-//     // ths involves creattion of a new compartment
-//     // a write operation
-//     pub fn add_secret(division: Division, label: &str, data: Vec<u8>) -> Result<bool, String> {
-// 
-//         crate::
-//         Err(String::from("failed to add secret to the vault"))
-//     }
-
     pub fn new() -> Self {
         Self {
             id: get_uid().to_string(),
-            username: User::get_username(),
-            email: User::get_email(),
+            username: String::new(),
+            email: String::new(),
+            password: String::new(),
+            extra_secret: String::from(
+                "20eda417591032b549dfa913840be65add1e26086bdfe70f159077d1178d45e9",
+            ),
             compartment: Compartment::new(),
         }
     }
 
-    // this function can either fetch the username from stdin
-    // or from the repository
-    fn get_username() -> String {
-        String::from("")
-    }
-
-    // this too for now it' can fetchfrom stdin or resitory
-    fn get_email() -> String {
-        String::from("")
-    }
-    // fn fetch_compartment(&self,label: &str, key: &str) -> Compartment {
-    //     self.compartment.new()
-    // }
-
-    // something cautious about add is that it'll remove any prevous labe or data present
+    // something cautious about add is that it'll remove any prevous label or data present
     // relace it with the new data and  label
-    pub fn add_secret(&mut self, input: InputSecret) -> Option<bool> {
-        // first we should check if the compartment is open
-        // the key should have performed that operation
-
+    pub fn add_secret(&mut self, input: InputSecret) -> bool {
+        let input_data = input.secret.as_bytes();
         self.check_lock();
-        
-        let result = self.compartment.add(Label::from_string(input.label), input.secret.into_bytes());
-        
-        match result {
-            Ok(()) => Some(true),
-            Err(_error) => None     // take good care of that error, maybe nagivate it upwards
+        if self.password.is_empty() {
+            return false;
+        } else {
+            let cipher_text = encrypt(
+                self.password.as_bytes(),
+                self.extra_secret.as_bytes(),
+                input_data,
+            );
+            let encoded = STANDARD.encode(&cipher_text);
+            let result = self
+                .compartment
+                .add(Label::from_string(input.label), encoded.into_bytes());
+            if result.is_ok() {
+                true
+            } else {
+                false
+            }
         }
     }
 
     pub fn retrieve_secret(&self) -> Result<String, String> {
         match self.compartment.retrieve() {
-            Ok(secret) => Ok(secret),
-            Err(error) => Err(error)
+            Ok(secret) => {
+                let decoded = STANDARD.decode(&secret);
+                if decoded.is_ok() {
+                let plain_text = decrypt(
+                    self.password.as_bytes(),
+                    self.extra_secret.as_bytes(),
+                    decoded.unwrap().as_slice()
+                )
+                .unwrap();
+                Ok(String::from_utf8(plain_text).unwrap())
+                } else {
+                    Err("failed to decode secret".to_owned())
+                }
+            }
+            Err(error) => Err(error),
         }
     }
 
     pub fn update_secret(&mut self, label: Option<Label>, data: Vec<u8>) -> Result<(), String> {
         // check lock, if something fishy return Err
-        match self.compartment.update(label, data) {
+        let cipher_text = encrypt(
+            self.password.as_bytes(),
+            self.extra_secret.as_bytes(),
+            String::from_utf8(data).unwrap().as_bytes(),
+        );
+        match self.compartment.update(label, cipher_text) {
             Ok(()) => Ok(()),
             Err(error) => Err(error),
         }
@@ -108,12 +109,14 @@ impl User {
             id: get_uid(),
             username: "demo_user".to_owned(),
             email: "demouser@gmil.com".to_owned(),
+            password: "".to_string(),
+            extra_secret: String::from(
+                "9d1949dbb70157080b28b8e7c55ac4db973c456c7b63ebf42a823b7904edb52c",
+            ),
             compartment: Compartment::new(),
         }
     }
 }
-
-
 
 // this represents any information the user sends by actions
 // like when adding a secret, deleting, updating
@@ -124,6 +127,4 @@ pub struct UserRequest<'a, T> {
 }
 
 // a btw custom wrapper for all requests
-struct Payload {
-    
-}
+struct Payload {}

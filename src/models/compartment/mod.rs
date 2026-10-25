@@ -60,16 +60,6 @@ pub struct Compartment {
 }
 
 impl Compartment {
-    // pub fn new_or_preloaded(label: String, _key: String) -> Self {
-    //     // we'll work more before returning a Compartment
-    //     // that key wi'll be used to authenticate
-    //     Self {
-    //         label: label, data: Vec::new(),
-    //     }
-    // }
-    // 
-    // 
-
     // later we should make this method return a result, just in case the key is invalid
     pub fn new() -> Self {
         // Compartment::preload_compartment();
@@ -104,6 +94,10 @@ impl Compartment {
         }
     }
 
+    // this works the same way as add, it's here coz in future 
+    // we might decide to make one user to have different secret compartments
+    // it should, just one of the unfinished features.
+    // in that case update will have to know the index to update which is not implemented now of courseg    
     pub fn update(&mut self, label: Option<Label>, data: Vec<u8>) -> Result<(), String> {
         self.label = Some(label.unwrap());
         self.data = Some(data);
