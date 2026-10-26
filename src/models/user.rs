@@ -3,8 +3,10 @@ use crate::models::division::Division;
 use crate::models::iracus::Iracus;
 use crate::services::crypt::{decrypt, encrypt};
 use crate::utils::{InputSecret, get_uid};
+use crate::repository::{Repository};
 
 use base64::{engine::general_purpose::STANDARD, Engine};
+use std::str;
 
 #[derive(Clone)]
 pub struct User {
@@ -38,7 +40,7 @@ impl User {
 
     // something cautious about add is that it'll remove any prevous label or data present
     // relace it with the new data and  label
-    pub fn add_secret(&mut self, input: InputSecret) -> bool {
+    pub fn add_secret(&mut self, input: InputSecret, repo: &Repository) -> bool {
         let input_data = input.secret.as_bytes();
         self.check_lock();
         if self.password.is_empty() {
@@ -50,6 +52,11 @@ impl User {
                 input_data,
             );
             let encoded = STANDARD.encode(&cipher_text);
+
+            // duplicate one copy to the repository
+            let key = input.label.clone();
+            repo.add(key, encoded.clone());
+            // duplicate one copy in memory
             let result = self
                 .compartment
                 .add(Label::from_string(input.label), encoded.into_bytes());
@@ -81,21 +88,28 @@ impl User {
         }
     }
 
-    pub fn update_secret(&mut self, label: Option<Label>, data: Vec<u8>) -> Result<(), String> {
+    pub fn update_secret(&mut self, label: Option<Label>, data: Vec<u8>, repo: &Repository) -> Result<(), String> {
         // check lock, if something fishy return Err
         let cipher_text = encrypt(
             self.password.as_bytes(),
             self.extra_secret.as_bytes(),
-            String::from_utf8(data).unwrap().as_bytes(),
+            String::from_utf8(data.clone()).unwrap().as_bytes(),
         );
-        match self.compartment.update(label, cipher_text) {
+
+        let encoded = STANDARD.encode(&cipher_text);
+
+        // update repo too
+        let _response = repo.update(&label.clone().unwrap().as_string(), str::from_utf8(data.as_slice()).unwrap());
+        
+        match self.compartment.update(label, encoded.into_bytes()) {
             Ok(()) => Ok(()),
             Err(error) => Err(error),
         }
     }
 
-    pub fn delete(&mut self) -> Result<(), String> {
+    pub fn delete(&mut self, label: &str, repo: &mut Repository) -> Result<(), String> {
         if let Ok(okay) = self.compartment.delete() {
+            repo.delete(label);
             Ok(okay)
         } else {
             Err(String::from(""))

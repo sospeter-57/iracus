@@ -1,2 +1,4 @@
 /target
 src/main.s
+.env
+iracus.db
