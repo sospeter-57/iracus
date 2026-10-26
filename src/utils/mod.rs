@@ -16,13 +16,21 @@ impl InputSecret {
             division: None,
         }
     }
-    pub fn input(&mut self) {
-        let secret = input_something("Enter Secret: : ");
-        let label = input_something("Enter secret label: ");
+    pub fn input(&mut self, update: Option<&str>) {
+        let secret: String = String::new();
+        let labl: String = String::new();
+        
+        if update.is_some() {
+             let secret = input_something("Enter New Secret Here: ");
+              let labl = input_something("Enter new label: here: ");
+        } else {
+            let secret = input_something("Enter Secret Here: ");
+             let labl = input_something("Enter secret label: ");
+        }
         let division = input_something("Enter secret division [foo/bar/zar/quix]: ");
 
         if validate_division(&division) {
-            self.label = label;
+            self.label = labl;
             self.secret = secret;
             self.division = {
                 match division.as_str() {

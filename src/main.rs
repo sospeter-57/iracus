@@ -1,16 +1,15 @@
 // use std::env;
-mod services;
 mod models;
 mod repository;
-use models::{insider::Insider,  user::User};
+mod services;
+use models::{insider::Insider, user::User};
 mod utils;
-use std::io::{Write, stdin, stdout};
 use std::env;
+use std::io::{Write, stdin, stdout};
 // use services::crypt::{encrypt};
 use utils::*;
 
 use crate::models::compartment::Label;
-
 
 fn main() {
     // first we login the user
@@ -20,17 +19,17 @@ fn main() {
 
     let mut insider = Insider::init();
     let payload = insider.repository.load_single_from_db();
-    
+
     // let username = "sospeter".to_owned();
     // let email = "sospeterkinyanjui57@gmail.com".to_owned();
-    
+
     let mut user: User = Insider::get_demo_user();
     user.password = password;
     user.username = username;
     user.compartment.label = Some(Label::from_string(payload.0));
     user.compartment.set_data(payload.1);
     insider.add_user(user.clone());
-    
+
     let vars: Vec<String> = env::args().collect();
 
     // // i've discovered a problem the or (||) operator can't solve, both operands being true
@@ -41,7 +40,7 @@ fn main() {
     if vars.len() == 1 {
         panic!("didn't pass any urgument to iracus")
     }
-    
+
     // if vars.len() == 2 && vars[1] != String::from("info") {
     //     panic!("that's definitely not the info command buddy")
     // }
@@ -54,7 +53,7 @@ fn main() {
 
     if command == "add" {
         let mut input_secret = InputSecret::new();
-        input_secret.input();
+        input_secret.input(None);
         if user.add_secret(input_secret, &insider.repository) {
             println!("secret added successfully")
         } else {
@@ -71,7 +70,7 @@ fn main() {
         //     _ => None
         // };
         // let search_division = search_division.unwrap();
-        
+
         let secret = user.retrieve_secret();
         println!("here's your long lived secret: {:?}", secret);
     } else if command == "info" {
@@ -82,31 +81,33 @@ fn main() {
         let secret = input_something("Please enter secret to update: ");
         match user.update_secret(None, secret.into_bytes(), &insider.repository) {
             Ok(()) => println!("secret updated successfully"),
-            Err(error) => println!("error during updating: {}", error)
+            Err(error) => println!("error during updating: {}", error),
         }
     } else if command == "delete" {
         match user.delete(&vars[2], &mut insider.repository) {
             Ok(()) => println!("secret deleted successfully"),
-            Err(error) => println!("error during deletion: {}", error)
+            Err(error) => println!("error during deletion: {}", error),
         }
     } else if command == "interactive" {
         let mut movex: String = String::new();
-    
+
         loop {
             println!("  1. add secret");
             println!("  2. retrieve secret");
-            println!("  3. view vault info");
+            println!("  3. update secret");
+            println!("  4. delete secret\n");
+            println!("  9. view vault info");
             println!(" 0. quit");
             print!("Enter move: ");
-    
+
             stdout().flush().unwrap();
             stdin().read_line(&mut movex).unwrap();
             // let movex = movex.trim();
-    
+
             match movex.as_str() {
                 "1\n" => {
                     let mut input_secret = InputSecret::new();
-                    input_secret.input();
+                    input_secret.input(None);
                     if user.add_secret(input_secret, &insider.repository) {
                         println!("secret added successfully");
                     } else {
@@ -115,16 +116,34 @@ fn main() {
                     movex.clear();
                 }
                 "2\n" => {
-                    
                     let secret = user.retrieve_secret();
                     match secret {
-                        Ok(secret) =>    println!("here's your long lived secret: {:?}", secret),
+                        Ok(secret) => println!("here's your long lived secret: {:?}", secret),
                         Err(error) => println!("this error occurred: {:?}", error),
                     }
-                 
+
                     movex.clear();
                 }
                 "3\n" => {
+                    let mut new_secret = InputSecret::new();
+                    new_secret.input(None);
+                    match user.update_secret(
+                        Some(Label::from_string(new_secret.label)),
+                        new_secret.secret.into_bytes(),
+                        &insider.repository,
+                    ) {
+                        Ok(_) => println!("secrete update successfully"),
+                       Err(error) => println!("error: {:?}", error) 
+                    }
+                }
+                "4\n" => {
+                    let label = input_something("Enter secret Label: ");
+                    match user.delete(label.as_str(), &mut insider.repository) {
+                        Ok(_) => println!("Secret was Deleted"),
+                        Err(error) => println!("Error: {:?}", error),
+                    }
+                }
+                "9\n" => {
                     let info = get_info();
                     println!("{}", info);
                     movex.clear();
@@ -138,9 +157,8 @@ fn main() {
         }
     } else {
         panic!("unknown bocal command used")
-    }    
-    
+    }
+
     // vault.open("password".to_owned())
     // println!("{:#?}", vault);
 }
-
