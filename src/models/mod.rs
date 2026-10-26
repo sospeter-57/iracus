@@ -3,6 +3,7 @@ mod bar;
 pub mod iracus;
 pub mod compartment;
 pub mod division;
+pub mod constants;
 mod door;
 mod foo;
 mod quix;

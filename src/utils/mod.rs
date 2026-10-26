@@ -1,6 +1,6 @@
 use std::io::{Write, stdin, stdout};
-
-use crate::models::{compartment::Label, division::Division};
+use std::path::Path;
+use crate::models::{division::Division};
 
 pub struct InputSecret {
     pub label: String,
@@ -65,4 +65,17 @@ pub fn get_uid() -> String {
 
 pub fn get_info() -> String {
     String::from("default infomation")
+}
+
+pub fn get_default_db_path<'a>() -> &'a Path {
+    // let args: Vec<String> = std::env::args().collect();
+    // let executable = args[0].clone();
+
+    const PATH: &str = "iracus.db";
+    use std::path::Path;
+
+    let path = Path::new(PATH);
+    // let project_root = executable.parent().and_then(|p| p.parent()).unwrap();
+    // project_root
+    path
 }

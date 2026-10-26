@@ -1,13 +1,15 @@
 // use std::env;
 mod services;
 mod models;
-mod persistent;
+mod repository;
 use models::{insider::Insider,  user::User};
 mod utils;
 use std::io::{Write, stdin, stdout};
 use std::env;
 // use services::crypt::{encrypt};
 use utils::*;
+
+use crate::models::compartment::Label;
 
 
 fn main() {
@@ -17,13 +19,16 @@ fn main() {
     let password = input_something("Enter your password: ");
 
     let mut insider = Insider::init();
-
+    let payload = insider.repository.load_single_from_db();
+    
     // let username = "sospeter".to_owned();
     // let email = "sospeterkinyanjui57@gmail.com".to_owned();
     
     let mut user: User = Insider::get_demo_user();
     user.password = password;
     user.username = username;
+    user.compartment.label = Some(Label::from_string(payload.0));
+    user.compartment.set_data(payload.1);
     insider.add_user(user.clone());
     
     let vars: Vec<String> = env::args().collect();
@@ -50,7 +55,7 @@ fn main() {
     if command == "add" {
         let mut input_secret = InputSecret::new();
         input_secret.input();
-        if user.add_secret(input_secret) {
+        if user.add_secret(input_secret, &insider.repository) {
             println!("secret added successfully")
         } else {
             println!("error: failed to add secret")
@@ -75,12 +80,12 @@ fn main() {
         println!("{}", info)
     } else if command == "update" {
         let secret = input_something("Please enter secret to update: ");
-        match user.update_secret(None, secret.into_bytes()) {
+        match user.update_secret(None, secret.into_bytes(), &insider.repository) {
             Ok(()) => println!("secret updated successfully"),
             Err(error) => println!("error during updating: {}", error)
         }
     } else if command == "delete" {
-        match user.delete() {
+        match user.delete(&vars[2], &mut insider.repository) {
             Ok(()) => println!("secret deleted successfully"),
             Err(error) => println!("error during deletion: {}", error)
         }
@@ -102,7 +107,7 @@ fn main() {
                 "1\n" => {
                     let mut input_secret = InputSecret::new();
                     input_secret.input();
-                    if user.add_secret(input_secret) {
+                    if user.add_secret(input_secret, &insider.repository) {
                         println!("secret added successfully");
                     } else {
                         println!("error: failed to add secret");

@@ -60,6 +60,9 @@ pub struct Compartment {
 }
 
 impl Compartment {
+    pub fn set_data(&mut self,data: String) {
+        self.data = Some(data.into_bytes())
+    }
     // later we should make this method return a result, just in case the key is invalid
     pub fn new() -> Self {
         // Compartment::preload_compartment();
